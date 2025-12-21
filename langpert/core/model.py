@@ -76,7 +76,6 @@ class LangPert:
         """Process LLM response into a PredictionResult."""
         knn_genes, reasoning = extract_genes_from_output(llm_response)
         valid_knn_genes = validate_gene_list(knn_genes, self.available_genes)
-
         if not valid_knn_genes:
             if self.fallback_mean is None:
                 raise ValueError(f"No valid kNN genes found for {gene} and no fallback provided")
@@ -100,6 +99,7 @@ class LangPert:
                       candidate_genes: Optional[List[str]] = None,
                       prompt_template: Optional[str] = None,
                       k_range: Optional[str] = None,
+                      cell_line: Optional[str] = None,
                       verbose: bool = False,
                       **llm_kwargs) -> PredictionResult:
         """
@@ -123,7 +123,7 @@ class LangPert:
 
         # Format prompt
         template = prompt_template or self.prompt_template
-        prompt = format_prompt(template, target_gene, candidate_genes, k_range=k_range)
+        prompt = format_prompt(template, target_gene, candidate_genes, k_range=k_range, cell_line=cell_line)
 
         # Print prompt template info only once (or when changed)
         if verbose:
@@ -148,7 +148,7 @@ class LangPert:
             print(f"Querying LLM for gene similarities to {target_gene}")
         else:
             print(f"\n[{target_gene}] Querying LLM...")
-
+        
         llm_response = self.backend.generate_text(
             prompt,
             system_prompt=self.system_prompt,
@@ -178,6 +178,7 @@ class LangPert:
                      prompt_template: Optional[str] = None,
                      k_range: Optional[str] = None,
                      batch_size: Optional[int] = None,
+                     cell_line: Optional[int] = None,
                      **llm_kwargs) -> Dict[str, PredictionResult]:
         """
         Predict perturbation effects for multiple genes.
@@ -223,7 +224,7 @@ class LangPert:
             for gene in batch_genes:
                 try:
                     gene_candidates = self._prepare_candidates(gene, candidate_genes)
-                    prompt = format_prompt(template, gene, gene_candidates, k_range=k_range)
+                    prompt = format_prompt(template, gene, gene_candidates, k_range=k_range, cell_line=cell_line)
                     batch_prompts.append(prompt)
                     batch_valid_genes.append(gene)
                 except ValueError as e:
