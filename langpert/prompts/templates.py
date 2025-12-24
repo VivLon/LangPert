@@ -114,8 +114,17 @@ Available genes: {list_of_genes}
 
 Consider the biological pathways, co-regulation, and protein-protein interactions of each gene. Ensure that the listed genes are highly relevant for perturbation prediction and are likely to result in similar changes in gene expression as the gene of interest when perturbed. You may replace or remove genes as needed to optimize the list for perturbation prediction. Please make any necessary alterations to the gene list to improve its relevance for perturbation prediction in the context of {cell_line} cell line. 
 
-Once you have reviewed and made any alterations, provide the updated gene LIST of genes:
-DO NOT provide multiple JSON objects or alternative analyses. Provide ONLY ONE response.
+Format your response as JSON with two parts:
+1. "reasoning": Explain your analysis, discussing potential connections between {gene} and relevant genes
+2. "kNN": List the most similar genes in order of similarity
+
+Example response format:
+{{
+  "reasoning": "Gene X is involved in pathway Y which directly interacts with gene Z...",
+  "kNN": ["Gene1", "Gene2", "Gene3", "Gene4", "Gene5"]
+}}
+
+Once you have reviewed and made any alterations, provide the updated response. DO NOT provide multiple JSON objects or alternative analyses. Provide ONLY ONE response.
 '''
 
 # Template registry
@@ -125,4 +134,5 @@ PROMPT_TEMPLATES = {
     "no_reasoning": NO_REASONING_PROMPT,
     "k562": K562_PROMPT,
     "cell_line_specific": CL_PROMPT,
+    "cell_line_refine": REFINE_CL_PROMPT,
 }

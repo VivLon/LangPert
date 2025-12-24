@@ -4,7 +4,8 @@ GPT-OSS-120B/GPT-OSS-20B backend for LangPert.
 
 from typing import Optional, Dict, Any
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, pipeline
-
+from transformers.distributed import DistributedConfig
+import torch
 from .base import BaseBackend
 
 
@@ -12,13 +13,14 @@ class GPTOSSBackend(BaseBackend):
     """Backend for local HuggingFace transformers models."""
 
     def __init__(self, model_name: str = "openai/gpt-oss-120b",
-                 device_map: str = "auto",
+                 device_map: str = "auto", parallelism = False,
                  cache_dir: Optional[str] = None, **kwargs):
         super().__init__(model_name=model_name, quantization=False,
                          device_map=device_map, cache_dir=cache_dir, **kwargs)
 
         self.model_name = model_name
         self.device_map = device_map
+        self.parallelism = parallelism
 
         # Use safe cache directory if none provided
         if cache_dir is None:
@@ -41,7 +43,7 @@ class GPTOSSBackend(BaseBackend):
         # Load tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.model_name,
-            cache_dir=self.cache_dir
+            cache_dir=self.cache_dir, padding_side="left"
         )
 
         # Configure quantization for large models
@@ -54,6 +56,7 @@ class GPTOSSBackend(BaseBackend):
         # Load model
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
+            attn_implementation="kernels-community/vllm-flash-attn3",
             **model_kwargs
         )
 

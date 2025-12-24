@@ -100,6 +100,7 @@ class LangPert:
                       prompt_template: Optional[str] = None,
                       k_range: Optional[str] = None,
                       cell_line: Optional[str] = None,
+                      single_pass_gene_list = None,
                       verbose: bool = False,
                       **llm_kwargs) -> PredictionResult:
         """
@@ -123,7 +124,7 @@ class LangPert:
 
         # Format prompt
         template = prompt_template or self.prompt_template
-        prompt = format_prompt(template, target_gene, candidate_genes, k_range=k_range, cell_line=cell_line)
+        prompt = format_prompt(template, target_gene, candidate_genes, k_range=k_range, cell_line=cell_line, single_pass_gene_list=single_pass_gene_list)
 
         # Print prompt template info only once (or when changed)
         if verbose:
@@ -178,7 +179,8 @@ class LangPert:
                      prompt_template: Optional[str] = None,
                      k_range: Optional[str] = None,
                      batch_size: Optional[int] = None,
-                     cell_line: Optional[int] = None,
+                     cell_line: Optional[str] = None,
+                     single_pass_gene_dict: Optional[str] = None,
                      **llm_kwargs) -> Dict[str, PredictionResult]:
         """
         Predict perturbation effects for multiple genes.
@@ -224,7 +226,10 @@ class LangPert:
             for gene in batch_genes:
                 try:
                     gene_candidates = self._prepare_candidates(gene, candidate_genes)
-                    prompt = format_prompt(template, gene, gene_candidates, k_range=k_range, cell_line=cell_line)
+                    if single_pass_gene_dict is not None:
+                        prompt = format_prompt(template, gene, gene_candidates, k_range=k_range, cell_line=cell_line, single_pass_gene_list=single_pass_gene_dict[gene].knn_genes)
+                    else:
+                        prompt = format_prompt(template, gene, gene_candidates, k_range=k_range, cell_line=cell_line, single_pass_gene_list=None)
                     batch_prompts.append(prompt)
                     batch_valid_genes.append(gene)
                 except ValueError as e:
