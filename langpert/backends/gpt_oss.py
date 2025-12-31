@@ -2,7 +2,7 @@
 GPT-OSS-120B/GPT-OSS-20B backend for LangPert.
 """
 
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, pipeline
 from transformers.distributed import DistributedConfig
 import torch
@@ -100,4 +100,34 @@ class GPTOSSBackend(BaseBackend):
         )
 
         return self.tokenizer.decode(outputs[0])
+    
+    def generate_batch(self, prompts: List[str], system_prompt, verbose=False, **kwargs) -> List[str]:
+        """Generate text for multiple prompts. Override for batched inference."""
+        conversations = []
+        for prompt in prompts:
+            full_prompt = prompt
+            if system_prompt:
+                full_prompt = f"{system_prompt}\n\n{prompt}"
+            conversations.append([{"role": "user", "content": full_prompt}])
+        
+        inputs = self.tokenizer.apply_chat_template(
+            conversations,
+            add_generation_prompt=True,
+            return_tensors="pt",
+            return_dict=True,
+            padding=True,      # <-- important for batching
+        )
+
+        device = next(self.model.parameters()).device
+        inputs = {k: v.to(device) for k, v in inputs.items()}
+        gen_config = {**self.generation_config, **kwargs}
+    
+        outputs = self.model.generate(
+            **inputs,
+            **gen_config,
+        )
+        texts = [
+            self.tokenizer.decode(out) for out in outputs
+        ]
+        return texts
         

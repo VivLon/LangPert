@@ -124,6 +124,10 @@ def format_prompt(template_name: str, gene: str, list_of_genes: List[str],
         return template.format(gene=gene, list_of_genes=genes_str, k_range=k_range, cell_line=cell_line, related_pathways=related_pathways)
     elif template_name == "cell_line_refine":
         return template.format(gene=gene, list_of_genes=genes_str, k_range=k_range, cell_line=cell_line, single_pass_gene_list=single_pass_genes_str)
+    elif template_name == "cell_line_drug_specific":
+        return template.format(drug=gene, list_of_drugs=genes_str, k_range=k_range, cell_line=cell_line)
+    elif template_name == "cell_line_drug_refine":
+        return template.format(drug=gene, list_of_drugs=genes_str, k_range=k_range, cell_line=cell_line, single_pass_drug_list=single_pass_genes_str)
     else:
         return template.format(gene=gene, list_of_genes=genes_str, k_range=k_range)
 
